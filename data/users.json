@@ -1,0 +1,21 @@
+[
+  {
+    "id": "usr-harsh-pro",
+    "name": "Harsh Bhadoria",
+    "email": "harshbhadoria6@gmail.com",
+    "phone": "+1 (555) 019-8374",
+    "plan": "pro",
+    "verified": true,
+    "createdAt": "2026-01-15T08:00:00Z",
+    "password": "password123"
+  },
+  {
+    "id": "usr_1792830662704_ghnz",
+    "name": "Tester",
+    "email": "test@example.com",
+    "password": "secretpassword",
+    "plan": "pro",
+    "verified": true,
+    "createdAt": "2026-10-24T08:31:02.704Z"
+  }
+]

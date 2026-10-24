@@ -1,0 +1,6 @@
+{
+  "name": "Nexora Notes",
+  "description": "Production-grade AI-assisted infinite canvas and note-taking workspace with AMOLED dark-mode engineering math grid, rich shape manipulation, and real-time cloud autosave.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
