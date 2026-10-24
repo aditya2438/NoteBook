@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Sidebar,
   CheckCircle2,
@@ -19,6 +19,8 @@ import {
   VolumeX,
   Sparkles,
   Languages,
+  MoreHorizontal,
+  Keyboard,
 } from 'lucide-react';
 import { BackgroundTheme } from '../../types';
 import { AnimatedLogo } from './AnimatedLogo';
@@ -80,9 +82,13 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [tempTitle, setTempTitle] = useState(noteTitle);
   const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [soundActive, setSoundActive] = useState(isSoundFeedbackEnabled());
+
+  const themeRef = useRef<HTMLDivElement>(null);
+  const moreRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -90,6 +96,20 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
     };
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  // Click outside to close menus
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (themeRef.current && !themeRef.current.contains(e.target as Node)) {
+        setIsThemeMenuOpen(false);
+      }
+      if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
+        setIsMoreMenuOpen(false);
+      }
+    };
+    document.addEventListener('pointerdown', handleClickOutside);
+    return () => document.removeEventListener('pointerdown', handleClickOutside);
   }, []);
 
   const toggleFullscreen = () => {
@@ -114,7 +134,7 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
     playClickSound();
     const link = document.createElement('a');
     link.href = '/api/download/project-zip';
-    link.download = 'auranotes-pro.zip';
+    link.download = 'notebook-source.zip';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -123,26 +143,26 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
   const currentThemeObj = THEME_LIST.find((t) => t.id === backgroundTheme) || THEME_LIST[0];
 
   return (
-    <header className="h-14 w-full bg-black/40 backdrop-blur-3xl border-b border-white/[0.12] px-3 md:px-5 flex items-center justify-between gap-3 md:gap-6 z-40 select-none shadow-[0_4px_30px_rgba(0,0,0,0.5)]">
-      {/* Zone 1: Brand & Document Navigation */}
-      <div className="flex items-center gap-2 md:gap-3.5 shrink-0">
+    <header className="h-14 w-full bg-[#05060d]/85 backdrop-blur-3xl border-b border-white/[0.12] px-2.5 sm:px-4 md:px-5 flex items-center justify-between gap-2 z-40 select-none shadow-[0_4px_30px_rgba(0,0,0,0.5)]">
+      {/* Zone 1: Brand & Document Title */}
+      <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
         <button
           onClick={() => {
             playClickSound();
             onToggleSidebar();
           }}
-          title="Toggle Notes Sidebar (Cmd+B)"
-          className="p-2 rounded-xl text-slate-300 hover:text-white bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 backdrop-blur-xl transition-all shadow-sm"
+          title="Toggle Notes Sidebar (Ctrl+B)"
+          className="p-1.5 sm:p-2 rounded-xl text-slate-300 hover:text-white bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 backdrop-blur-xl transition-all shadow-sm shrink-0"
         >
           <Sidebar className="w-4 h-4" />
         </button>
 
-        {/* Master Kinetic Animated Logo */}
-        <div className="pr-2 md:pr-3 border-r border-white/10">
-          <AnimatedLogo size="md" showTagline={false} />
+        {/* Master Logo */}
+        <div className="pr-1 sm:pr-2 border-r border-white/10 shrink-0">
+          <AnimatedLogo size="sm" showTagline={false} />
         </div>
 
-        {/* Liquid Glass Document Title Pill */}
+        {/* Document Title Pill */}
         {isEditingTitle ? (
           <input
             autoFocus
@@ -157,7 +177,7 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
                 setTempTitle(noteTitle);
               }
             }}
-            className="px-3 py-1.5 text-xs font-semibold bg-white/[0.12] backdrop-blur-xl text-white rounded-xl border border-cyan-400 focus:outline-none max-w-[140px] sm:max-w-[240px] shadow-inner"
+            className="px-2.5 py-1 text-xs font-semibold bg-white/[0.15] backdrop-blur-xl text-white rounded-xl border border-cyan-400 focus:outline-none max-w-[120px] sm:max-w-[180px] shadow-inner"
           />
         ) : (
           <button
@@ -167,57 +187,60 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
               setIsEditingTitle(true);
             }}
             title="Click to rename document"
-            className="text-xs font-semibold text-slate-200 hover:text-white bg-white/[0.05] hover:bg-white/[0.1] px-3 py-1.5 rounded-xl border border-white/10 backdrop-blur-xl transition-all truncate max-w-[130px] sm:max-w-[220px]"
+            className="text-xs font-semibold text-slate-200 hover:text-white bg-white/[0.05] hover:bg-white/[0.1] px-2.5 py-1 rounded-xl border border-white/10 backdrop-blur-xl transition-all truncate max-w-[100px] sm:max-w-[150px] md:max-w-[180px]"
           >
             {noteTitle}
           </button>
         )}
 
-        {/* iOS Dynamic Island Style Sync Pill */}
-        <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.06] border border-white/10 backdrop-blur-xl text-[11px] font-mono text-slate-300 shadow-sm">
+        {/* Sync Pill */}
+        <div className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/[0.05] border border-white/10 text-[10px] font-mono text-slate-300 shrink-0">
           {saveStatus === 'saving' ? (
             <>
-              <RefreshCw className="w-3 h-3 text-cyan-400 animate-spin" />
-              <span className="text-cyan-300">Syncing...</span>
+              <RefreshCw className="w-2.5 h-2.5 text-cyan-400 animate-spin" />
+              <span className="text-cyan-300 hidden md:inline">Syncing</span>
             </>
           ) : saveStatus === 'saved' ? (
             <>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
-              <span className="text-emerald-400 font-medium">Cloud Saved</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]" />
+              <span className="text-emerald-400 hidden md:inline">Saved</span>
             </>
           ) : (
             <>
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-              <span className="text-amber-400">Unsaved</span>
+              <span className="text-amber-400 hidden md:inline">Unsaved</span>
             </>
           )}
         </div>
       </div>
 
-      {/* Zone 2: Navigation & Pro Tools (macOS Glassmorphic Bar) */}
-      <div className="hidden lg:flex items-center gap-2 shrink-0">
-        {/* Real Paper vs Space vs Dark Theme Switcher */}
-        <div className="relative">
+      {/* Zone 2: Desktop Action Bar (Guaranteed Never to Clip) */}
+      <div className="hidden lg:flex items-center gap-1.5 sm:gap-2">
+        {/* Background Theme Switcher */}
+        <div className="relative shrink-0" ref={themeRef}>
           <button
             onClick={() => {
               playClickSound();
               setIsThemeMenuOpen(!isThemeMenuOpen);
+              setIsMoreMenuOpen(false);
             }}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.07] hover:bg-white/[0.14] border border-white/15 backdrop-blur-2xl text-xs text-slate-200 transition-all shadow-sm"
-            title="Switch Canvas Background Theme (Space, Paper, Dark, etc.)"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/15 text-xs text-slate-200 transition-all shadow-sm"
+            title="Switch Background Theme"
           >
             <div
-              className="w-3.5 h-3.5 rounded-full border border-white/40 shadow-sm shrink-0"
+              className="w-3 h-3 rounded-full border border-white/40 shadow-sm shrink-0"
               style={{ backgroundColor: currentThemeObj.preview }}
             />
-            <span className="truncate max-w-[130px] font-medium">{currentThemeObj.label}</span>
+            <span className="truncate max-w-[90px] xl:max-w-[120px] font-medium text-[11px] xl:text-xs">
+              {currentThemeObj.label}
+            </span>
             <ChevronDown className="w-3 h-3 text-slate-400" />
           </button>
 
           {isThemeMenuOpen && (
-            <div className="absolute top-full left-0 mt-2 w-72 p-2 rounded-2xl bg-[#090b14]/90 backdrop-blur-3xl border border-white/20 shadow-[0_16px_40px_rgba(0,0,0,0.7)] z-50 space-y-1">
+            <div className="absolute top-full left-0 mt-2 w-72 p-2 rounded-2xl bg-[#090b14]/95 backdrop-blur-3xl border border-white/20 shadow-[0_16px_40px_rgba(0,0,0,0.8)] z-50 space-y-1 max-h-80 overflow-y-auto">
               <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                Select Theme & Paper Mode
+                Select Background Theme
               </div>
               {THEME_LIST.map((th) => (
                 <button
@@ -234,11 +257,11 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
                   }`}
                 >
                   <div
-                    className="w-4 h-4 rounded-full border border-white/40 shrink-0 shadow-sm"
+                    className="w-3.5 h-3.5 rounded-full border border-white/40 shrink-0 shadow-sm"
                     style={{ backgroundColor: th.preview }}
                   />
                   <div className="flex flex-col min-w-0">
-                    <span className="font-semibold">{th.label}</span>
+                    <span className="font-semibold text-xs">{th.label}</span>
                     <span className="text-[10px] text-slate-400 truncate">{th.desc}</span>
                   </div>
                 </button>
@@ -247,8 +270,8 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
           )}
         </div>
 
-        {/* Mac Style Glass Zoom Controls */}
-        <div className="flex items-center gap-1 px-2 py-1 rounded-xl bg-white/[0.07] border border-white/15 backdrop-blur-2xl shadow-sm">
+        {/* Compact Zoom Controls */}
+        <div className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-xl bg-white/[0.06] border border-white/15 backdrop-blur-2xl shadow-sm shrink-0">
           <button
             onClick={() => {
               playClickSound();
@@ -257,7 +280,7 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
             title="Zoom Out (-)"
             className="p-1 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
           >
-            <ZoomOut className="w-3.5 h-3.5" />
+            <ZoomOut className="w-3 h-3" />
           </button>
           <button
             onClick={() => {
@@ -265,7 +288,7 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
               onZoomReset();
             }}
             title="Reset Zoom to 100%"
-            className="px-2 text-xs font-mono font-bold text-cyan-300 hover:underline"
+            className="px-1 text-[11px] font-mono font-bold text-cyan-300 hover:underline"
           >
             {Math.round(zoom * 100)}%
           </button>
@@ -277,11 +300,11 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
             title="Zoom In (+)"
             className="p-1 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
           >
-            <ZoomIn className="w-3.5 h-3.5" />
+            <ZoomIn className="w-3 h-3" />
           </button>
         </div>
 
-        {/* Tactile Audio Feedback Switch */}
+        {/* Tactile Audio Switch */}
         <button
           onClick={() => {
             const next = !soundActive;
@@ -289,115 +312,207 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
             setSoundFeedbackEnabled(next);
             if (next) playClickSound();
           }}
-          title={soundActive ? 'Tactile Audio Feedback: ON' : 'Tactile Audio Feedback: MUTED'}
-          className={`p-2 rounded-xl border backdrop-blur-xl transition-all shadow-sm ${
+          title={soundActive ? 'Tactile Audio: ON' : 'Tactile Audio: MUTED'}
+          className={`p-1.5 rounded-xl border transition-all shrink-0 ${
             soundActive
               ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
-              : 'bg-white/[0.06] text-slate-400 border-white/15 hover:text-white hover:bg-white/10'
+              : 'bg-white/[0.05] text-slate-400 border-white/15 hover:text-white'
           }`}
         >
           {soundActive ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
         </button>
 
-        {/* TV Presentation Mode Toggle */}
-        {onTogglePresentationMode && (
+        {/* Secondary Pro Tools: Expanded on 2XL, Collapsed on standard screens */}
+        <div className="hidden 2xl:flex items-center gap-1.5">
+          {onTogglePresentationMode && (
+            <button
+              onClick={() => {
+                playClickSound();
+                onTogglePresentationMode();
+              }}
+              title="Zen Stage (Distraction-Free Canvas)"
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-xs font-medium transition-all ${
+                isPresentationMode
+                  ? 'bg-cyan-500/30 text-cyan-200 border-cyan-400/60 shadow-[0_0_15px_rgba(6,182,212,0.4)]'
+                  : 'bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 border-white/15'
+              }`}
+            >
+              <Presentation className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Zen Stage</span>
+            </button>
+          )}
+
+          {onOpenLanguage && (
+            <button
+              onClick={() => {
+                playClickSound();
+                onOpenLanguage();
+              }}
+              title="Trilingual Translator & Spell Check"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 hover:text-white border border-indigo-500/30 text-xs font-medium transition-all"
+            >
+              <Languages className="w-3.5 h-3.5 text-indigo-400" />
+              <span>Translate</span>
+            </button>
+          )}
+
           <button
             onClick={() => {
               playClickSound();
-              onTogglePresentationMode();
+              onOpenTemplates();
             }}
-            title={isPresentationMode ? 'Exit Zen Stage' : 'Zen Stage (Distraction-Free Canvas Focus)'}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border backdrop-blur-xl text-xs font-medium transition-all shadow-sm ${
-              isPresentationMode
-                ? 'bg-cyan-500/30 text-cyan-200 border-cyan-400/60 shadow-[0_0_15px_rgba(6,182,212,0.4)]'
-                : 'bg-white/[0.07] hover:bg-white/[0.14] text-slate-300 border-white/15'
+            title="Starter Templates Gallery"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 hover:text-white border border-white/15 text-xs transition-all"
+          >
+            <LayoutTemplate className="w-3.5 h-3.5 text-indigo-400" />
+            <span>Templates</span>
+          </button>
+        </div>
+
+        {/* More Options Dropdown (...) for Screen Adaptability */}
+        <div className="relative shrink-0" ref={moreRef}>
+          <button
+            onClick={() => {
+              playClickSound();
+              setIsMoreMenuOpen(!isMoreMenuOpen);
+              setIsThemeMenuOpen(false);
+            }}
+            title="More Canvas Tools & Options"
+            className={`p-1.5 rounded-xl border transition-all ${
+              isMoreMenuOpen
+                ? 'bg-white/20 text-white border-white/40'
+                : 'bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 border-white/15'
             }`}
           >
-            <Presentation className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="hidden xl:inline">Zen Stage</span>
+            <MoreHorizontal className="w-4 h-4" />
           </button>
-        )}
 
-        {/* Fullscreen Button */}
-        <button
-          onClick={toggleFullscreen}
-          title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen (F11 / TV / Big Screen)'}
-          className="p-2 rounded-xl bg-white/[0.07] hover:bg-white/[0.14] text-slate-300 border border-white/15 backdrop-blur-2xl transition-all shadow-sm"
-        >
-          <Maximize2 className="w-3.5 h-3.5" />
-        </button>
+          {isMoreMenuOpen && (
+            <div className="absolute top-full right-0 mt-2 w-56 p-2 rounded-2xl bg-[#090b14]/95 backdrop-blur-3xl border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.85)] z-50 space-y-1">
+              <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-white/10">
+                Workspace Tools
+              </div>
 
-        {/* Trilingual Translation & Spell Check Suite */}
-        {onOpenLanguage && (
-          <button
-            onClick={() => {
-              playClickSound();
-              onOpenLanguage();
-            }}
-            title="Trilingual Translator & Spell Check (English, Hindi, Hinglish)"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 hover:text-white border border-indigo-500/30 backdrop-blur-2xl text-xs font-medium transition-all shadow-sm"
-          >
-            <Languages className="w-3.5 h-3.5 text-indigo-400" />
-            <span className="hidden xl:inline">Translate & Spell</span>
-            <span className="inline xl:hidden">Translate</span>
-          </button>
-        )}
+              {onOpenLanguage && (
+                <button
+                  onClick={() => {
+                    playClickSound();
+                    setIsMoreMenuOpen(false);
+                    onOpenLanguage();
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs text-slate-200 hover:text-white hover:bg-white/10 transition-all"
+                >
+                  <Languages className="w-4 h-4 text-indigo-400" />
+                  <span>Translate & Spell Check</span>
+                </button>
+              )}
 
-        {/* Cloud Account & Security Modal */}
+              <button
+                onClick={() => {
+                  playClickSound();
+                  setIsMoreMenuOpen(false);
+                  onOpenTemplates();
+                }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs text-slate-200 hover:text-white hover:bg-white/10 transition-all"
+              >
+                <LayoutTemplate className="w-4 h-4 text-purple-400" />
+                <span>Starter Templates</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  playClickSound();
+                  setIsMoreMenuOpen(false);
+                  onOpenShortcuts();
+                }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs text-slate-200 hover:text-white hover:bg-white/10 transition-all"
+              >
+                <Keyboard className="w-4 h-4 text-amber-400" />
+                <span>Keyboard Shortcuts</span>
+              </button>
+
+              {onTogglePresentationMode && (
+                <button
+                  onClick={() => {
+                    playClickSound();
+                    setIsMoreMenuOpen(false);
+                    onTogglePresentationMode();
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs text-slate-200 hover:text-white hover:bg-white/10 transition-all"
+                >
+                  <Presentation className="w-4 h-4 text-cyan-400" />
+                  <span>{isPresentationMode ? 'Exit Zen Stage' : 'Enter Zen Stage (Focus)'}</span>
+                </button>
+              )}
+
+              <button
+                onClick={() => {
+                  setIsMoreMenuOpen(false);
+                  toggleFullscreen();
+                }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs text-slate-200 hover:text-white hover:bg-white/10 transition-all"
+              >
+                <Maximize2 className="w-4 h-4 text-emerald-400" />
+                <span>{isFullscreen ? 'Exit Fullscreen' : 'Fullscreen Window'}</span>
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* PRIMARY ACTION 1: Cloud Account & OTP (Always Visible) */}
         <button
           onClick={() => {
             playClickSound();
             onOpenAccount();
           }}
-          title="Cloud Account, OTP Verification & Security"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-200 hover:text-white border border-cyan-500/30 backdrop-blur-2xl text-xs font-medium transition-all shadow-sm"
+          title="Account, OTP & Cloud Database"
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-200 hover:text-white border border-cyan-500/30 text-xs font-medium transition-all shadow-sm shrink-0 cursor-pointer"
         >
           <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
-          <span className="hidden xl:inline">Account & OTP</span>
-          <span className="inline xl:hidden">Account</span>
+          <span className="hidden xl:inline text-xs">Account</span>
         </button>
 
-        {/* Template Gallery */}
-        <button
-          onClick={() => {
-            playClickSound();
-            onOpenTemplates();
-          }}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.07] hover:bg-white/[0.14] text-slate-300 hover:text-white border border-white/15 backdrop-blur-2xl text-xs transition-all shadow-sm"
-        >
-          <LayoutTemplate className="w-3.5 h-3.5 text-indigo-400" />
-          <span className="hidden xl:inline">Templates</span>
-        </button>
-
-        {/* Export Modal */}
+        {/* PRIMARY ACTION 2: High-Res Export (Always Visible) */}
         <button
           onClick={() => {
             playClickSound();
             onOpenExport();
           }}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.07] hover:bg-white/[0.14] text-slate-300 hover:text-white border border-white/15 backdrop-blur-2xl text-xs transition-all shadow-sm"
+          title="Export Canvas to PNG, SVG, PDF or JSON"
+          className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white text-xs font-semibold shadow-md shadow-cyan-600/30 transition-all shrink-0 cursor-pointer"
         >
-          <Download className="w-3.5 h-3.5 text-cyan-400" />
+          <Download className="w-3.5 h-3.5" />
           <span>Export</span>
         </button>
 
-        {/* One-Click Direct Project ZIP Download */}
+        {/* PRIMARY ACTION 3: Download Complete Source Code ZIP (Always Visible) */}
         <button
           onClick={handleDownloadZip}
-          title="Download Complete Project ZIP folder"
-          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500/90 to-teal-500/90 hover:from-emerald-400 hover:to-teal-400 text-white text-xs font-semibold backdrop-blur-xl border border-white/20 shadow-[0_4px_16px_rgba(16,185,129,0.3)] transition-all"
+          title="Download Complete Clean Project ZIP archive"
+          className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-semibold shadow-md shadow-emerald-600/30 transition-all shrink-0 cursor-pointer"
         >
           <FileArchive className="w-3.5 h-3.5" />
-          <span>Get ZIP</span>
+          <span className="hidden sm:inline">Download</span>
         </button>
       </div>
 
-      {/* Zone 3: Mobile & Tablet Quick Actions */}
-      <div className="flex lg:hidden items-center gap-2">
+      {/* Zone 3: Mobile & Tablet Hamburger Toggle */}
+      <div className="flex lg:hidden items-center gap-1.5">
+        <button
+          onClick={() => {
+            playClickSound();
+            onOpenExport();
+          }}
+          title="Export Canvas"
+          className="p-1.5 rounded-xl bg-cyan-600 text-white text-xs font-semibold shadow-md"
+        >
+          <Download className="w-3.5 h-3.5" />
+        </button>
+
         <button
           onClick={handleDownloadZip}
           title="Download Project ZIP"
-          className="p-2 rounded-xl bg-emerald-600/90 text-white text-xs font-semibold shadow-md border border-white/20 backdrop-blur-xl"
+          className="p-1.5 rounded-xl bg-emerald-600 text-white text-xs font-semibold shadow-md"
         >
           <FileArchive className="w-3.5 h-3.5" />
         </button>
@@ -407,7 +522,7 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
             playClickSound();
             setIsMobileMenuOpen(!isMobileMenuOpen);
           }}
-          className="p-2 rounded-xl bg-white/[0.08] text-white border border-white/15 backdrop-blur-xl"
+          className="p-1.5 rounded-xl bg-white/[0.08] text-white border border-white/15"
         >
           {isMobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
         </button>
@@ -415,55 +530,56 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
 
       {/* Mobile Glassmorphic Drawer Menu */}
       {isMobileMenuOpen && (
-        <div className="absolute top-14 left-0 right-0 bg-[#070913]/90 backdrop-blur-3xl border-b border-white/15 p-4 z-50 flex flex-col gap-3.5 shadow-2xl lg:hidden">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-300">Canvas Themes</span>
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={() => {
-                  playClickSound();
-                  onThemeChange(backgroundTheme === 'space' ? 'paper' : 'space');
-                }}
-                className="px-2.5 py-1 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-500 text-white text-xs font-medium shadow-sm"
-              >
-                {backgroundTheme === 'space' ? 'Switch to Paper Grid' : 'Switch to Space'}
-              </button>
-            </div>
+        <div className="absolute top-14 left-0 right-0 bg-[#070913]/95 backdrop-blur-3xl border-b border-white/15 p-4 z-50 flex flex-col gap-3 shadow-2xl lg:hidden max-h-[85vh] overflow-y-auto">
+          {/* Action Grid */}
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => {
+                playClickSound();
+                setIsMobileMenuOpen(false);
+                onOpenExport();
+              }}
+              className="flex items-center justify-center gap-2 p-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-indigo-600 text-white text-xs font-semibold shadow-md"
+            >
+              <Download className="w-4 h-4" />
+              <span>Export Canvas</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                handleDownloadZip();
+              }}
+              className="flex items-center justify-center gap-2 p-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-semibold shadow-md"
+            >
+              <FileArchive className="w-4 h-4" />
+              <span>Download ZIP</span>
+            </button>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
-            {THEME_LIST.slice(0, 4).map((th) => (
-              <button
-                key={th.id}
-                onClick={() => {
-                  playClickSound();
-                  onThemeChange(th.id);
-                  setIsMobileMenuOpen(false);
-                }}
-                className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs text-left backdrop-blur-xl ${
-                  backgroundTheme === th.id
-                    ? 'border-cyan-400 bg-cyan-600/30 text-white shadow-sm'
-                    : 'border-white/10 bg-white/[0.05] text-slate-300'
-                }`}
-              >
-                <div className="w-3.5 h-3.5 rounded-full border border-white/30" style={{ backgroundColor: th.preview }} />
-                <span className="truncate font-medium">{th.label.split(' ')[0]}</span>
-              </button>
-            ))}
-          </div>
+            <button
+              onClick={() => {
+                playClickSound();
+                setIsMobileMenuOpen(false);
+                onOpenAccount();
+              }}
+              className="flex items-center gap-2 p-2.5 rounded-xl bg-white/[0.06] border border-white/10 text-slate-200 text-xs font-medium"
+            >
+              <ShieldCheck className="w-4 h-4 text-cyan-400" />
+              <span>Account & OTP</span>
+            </button>
 
-          {/* Mobile Pro Tools Row */}
-          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/10">
             {onOpenLanguage && (
               <button
                 onClick={() => {
                   playClickSound();
-                  onOpenLanguage();
                   setIsMobileMenuOpen(false);
+                  onOpenLanguage();
                 }}
-                className="flex items-center justify-center gap-1.5 p-2 rounded-xl bg-indigo-500/20 text-indigo-300 text-xs font-medium border border-indigo-500/30 backdrop-blur-xl"
+                className="flex items-center gap-2 p-2.5 rounded-xl bg-white/[0.06] border border-white/10 text-slate-200 text-xs font-medium"
               >
-                <Languages className="w-3.5 h-3.5" />
+                <Languages className="w-4 h-4 text-indigo-400" />
                 <span>Translate & Spell</span>
               </button>
             )}
@@ -471,84 +587,54 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
             <button
               onClick={() => {
                 playClickSound();
-                onOpenAccount();
                 setIsMobileMenuOpen(false);
-              }}
-              className="flex items-center justify-center gap-1.5 p-2 rounded-xl bg-cyan-500/20 text-cyan-200 text-xs font-medium border border-cyan-500/30 backdrop-blur-xl"
-            >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Account & OTP</span>
-            </button>
-
-            <button
-              onClick={() => {
-                playClickSound();
                 onOpenTemplates();
-                setIsMobileMenuOpen(false);
               }}
-              className="flex items-center justify-center gap-1.5 p-2 rounded-xl bg-white/[0.08] text-slate-300 text-xs border border-white/10 backdrop-blur-xl"
+              className="flex items-center gap-2 p-2.5 rounded-xl bg-white/[0.06] border border-white/10 text-slate-200 text-xs font-medium"
             >
-              <LayoutTemplate className="w-3.5 h-3.5" />
+              <LayoutTemplate className="w-4 h-4 text-purple-400" />
               <span>Templates</span>
             </button>
 
             <button
               onClick={() => {
-                const next = !soundActive;
-                setSoundActive(next);
-                setSoundFeedbackEnabled(next);
-                if (next) playClickSound();
+                playClickSound();
+                setIsMobileMenuOpen(false);
+                onOpenShortcuts();
               }}
-              className="flex items-center justify-center gap-1.5 p-2 rounded-xl bg-white/[0.08] text-slate-300 text-xs border border-white/10 backdrop-blur-xl"
+              className="flex items-center gap-2 p-2.5 rounded-xl bg-white/[0.06] border border-white/10 text-slate-200 text-xs font-medium"
             >
-              {soundActive ? <Volume2 className="w-3.5 h-3.5 text-cyan-400" /> : <VolumeX className="w-3.5 h-3.5" />}
-              <span>{soundActive ? 'Sound: On' : 'Sound: Off'}</span>
+              <Keyboard className="w-4 h-4 text-amber-400" />
+              <span>Shortcuts</span>
             </button>
           </div>
 
-          <div className="flex items-center justify-between pt-2 border-t border-white/10">
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => {
-                  playClickSound();
-                  onZoomOut();
-                }}
-                className="p-2 rounded-xl bg-white/[0.08] text-white border border-white/10"
-              >
-                <ZoomOut className="w-4 h-4" />
-              </button>
-              <span className="font-mono text-xs font-bold text-cyan-300">{Math.round(zoom * 100)}%</span>
-              <button
-                onClick={() => {
-                  playClickSound();
-                  onZoomIn();
-                }}
-                className="p-2 rounded-xl bg-white/[0.08] text-white border border-white/10"
-              >
-                <ZoomIn className="w-4 h-4" />
-              </button>
+          <div className="pt-2 border-t border-white/10">
+            <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+              Background Themes
             </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => {
-                  playClickSound();
-                  onOpenExport();
-                  setIsMobileMenuOpen(false);
-                }}
-                className="px-3 py-1.5 rounded-xl bg-white/[0.08] text-xs text-white border border-white/10"
-              >
-                Export
-              </button>
-              <button
-                onClick={() => {
-                  handleDownloadZip();
-                  setIsMobileMenuOpen(false);
-                }}
-                className="px-3.5 py-1.5 rounded-xl bg-emerald-600 text-xs text-white font-semibold shadow-md"
-              >
-                Download ZIP
-              </button>
+            <div className="grid grid-cols-2 gap-2">
+              {THEME_LIST.slice(0, 6).map((th) => (
+                <button
+                  key={th.id}
+                  onClick={() => {
+                    playClickSound();
+                    onThemeChange(th.id);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`flex items-center gap-2 p-2 rounded-xl border text-xs text-left ${
+                    backgroundTheme === th.id
+                      ? 'border-cyan-400 bg-cyan-600/30 text-white'
+                      : 'border-white/10 bg-white/[0.04] text-slate-300'
+                  }`}
+                >
+                  <div
+                    className="w-3.5 h-3.5 rounded-full border border-white/30 shrink-0"
+                    style={{ backgroundColor: th.preview }}
+                  />
+                  <span className="truncate">{th.label}</span>
+                </button>
+              ))}
             </div>
           </div>
         </div>
