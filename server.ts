@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
 import { GoogleGenAI } from '@google/genai';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { CanvasElement, NoteItem, SecurityLogItem, UserProfile } from './src/types';
 import { checkSpelling, translateTextOffline } from './src/utils/languageEngine';
 
@@ -71,6 +72,25 @@ if (apiKey) {
   } catch (err) {
     console.warn('Failed to initialize GoogleGenAI:', err);
   }
+}
+
+// Initialize Supabase Client (Cloud PostgreSQL)
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_KEY =
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.SUPABASE_ANON_KEY ||
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+let supabase: SupabaseClient | null = null;
+
+if (SUPABASE_URL && SUPABASE_KEY) {
+  try {
+    supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+    console.log('✅ Supabase Cloud PostgreSQL client initialized successfully.');
+  } catch (err) {
+    console.warn('⚠️ Supabase initialization failed, falling back to local file storage:', err);
+  }
+} else {
+  console.log('ℹ️ Running with local JSON persistence. Provide SUPABASE_URL & SUPABASE_ANON_KEY to connect cloud database.');
 }
 
 // In-memory demo data with realistic seed notes
@@ -631,9 +651,52 @@ app.get(['/auranotes-pro.zip', '/nexora-notes-pro.zip', '/api/download/project-z
   }
 });
 
+// Database Status Health Check
+app.get('/api/database/status', (_req, res) => {
+  res.json({
+    success: true,
+    provider: supabase ? 'supabase_cloud_postgres' : 'local_json_disk',
+    connected: true,
+    message: supabase
+      ? 'Connected to live Supabase PostgreSQL cloud database.'
+      : 'Running on local file storage (data/notes.json). Add SUPABASE_URL & SUPABASE_ANON_KEY to connect PostgreSQL.',
+  });
+});
+
 // Notes CRUD (User-bound Cloud Persistence)
-app.get('/api/notes', (req, res) => {
+app.get('/api/notes', async (req, res) => {
   const userId = (req.query.userId as string) || currentUser?.id;
+
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('notes')
+        .select('*')
+        .eq('is_trash', false)
+        .order('updated_at', { ascending: false });
+
+      if (!error && Array.isArray(data) && data.length > 0) {
+        const mapped: NoteItem[] = data.map((n: any) => ({
+          id: String(n.id),
+          userId: n.user_id,
+          title: n.title || 'Untitled Note',
+          tags: Array.isArray(n.tags) ? n.tags : ['Canvas'],
+          isPinned: Boolean(n.is_pinned),
+          isTrash: Boolean(n.is_trash),
+          gridType: n.grid_type || 'math',
+          backgroundTheme: n.background_theme || 'space',
+          viewport: n.viewport || { x: 0, y: 0, zoom: 1 },
+          elements: Array.isArray(n.elements) ? n.elements : [],
+          createdAt: n.created_at || new Date().toISOString(),
+          updatedAt: n.updated_at || new Date().toISOString(),
+        }));
+        return res.json({ success: true, notes: mapped, provider: 'supabase' });
+      }
+    } catch (err) {
+      console.warn('Supabase fetch notice, falling back to local storage:', err);
+    }
+  }
+
   let filtered = notesDatabase.filter((n) => !n.userId || n.userId === userId);
   if (filtered.length === 0 && userId) {
     const personalWelcomeNote: NoteItem = {
@@ -711,6 +774,27 @@ app.post('/api/notes', (req, res) => {
 
   notesDatabase.unshift(newNote);
   persistNotesToDisk();
+
+  if (supabase) {
+    supabase
+      .from('notes')
+      .upsert({
+        id: newNote.id,
+        user_id: newNote.userId || currentUser?.id,
+        title: newNote.title,
+        grid_type: newNote.gridType,
+        background_theme: newNote.backgroundTheme,
+        viewport: newNote.viewport,
+        elements: newNote.elements,
+        is_pinned: newNote.isPinned,
+        is_trash: newNote.isTrash,
+        updated_at: newNote.updatedAt,
+      })
+      .then(({ error }: any) => {
+        if (error) console.warn('Supabase insert note notice:', error.message);
+      });
+  }
+
   res.status(201).json({ success: true, note: newNote });
 });
 
@@ -736,6 +820,27 @@ app.put('/api/notes/:id', (req, res) => {
     };
     notesDatabase.unshift(newNote);
     persistNotesToDisk();
+
+    if (supabase) {
+      supabase
+        .from('notes')
+        .upsert({
+          id: newNote.id,
+          user_id: newNote.userId || currentUser?.id,
+          title: newNote.title,
+          grid_type: newNote.gridType,
+          background_theme: newNote.backgroundTheme,
+          viewport: newNote.viewport,
+          elements: newNote.elements,
+          is_pinned: newNote.isPinned,
+          is_trash: newNote.isTrash,
+          updated_at: newNote.updatedAt,
+        })
+        .then(({ error }: any) => {
+          if (error) console.warn('Supabase insert note notice:', error.message);
+        });
+    }
+
     return res.json({ success: true, note: newNote });
   }
 
@@ -749,6 +854,27 @@ app.put('/api/notes/:id', (req, res) => {
 
   notesDatabase[index] = updatedNote;
   persistNotesToDisk();
+
+  if (supabase) {
+    supabase
+      .from('notes')
+      .upsert({
+        id: updatedNote.id,
+        user_id: updatedNote.userId || currentUser?.id,
+        title: updatedNote.title,
+        grid_type: updatedNote.gridType,
+        background_theme: updatedNote.backgroundTheme,
+        viewport: updatedNote.viewport,
+        elements: updatedNote.elements,
+        is_pinned: updatedNote.isPinned,
+        is_trash: updatedNote.isTrash,
+        updated_at: updatedNote.updatedAt,
+      })
+      .then(({ error }: any) => {
+        if (error) console.warn('Supabase update note notice:', error.message);
+      });
+  }
+
   res.json({ success: true, note: updatedNote });
 });
 
@@ -767,6 +893,19 @@ app.delete('/api/notes/:id', (req, res) => {
   }
 
   persistNotesToDisk();
+
+  if (supabase) {
+    if (permanent) {
+      supabase.from('notes').delete().eq('id', noteId).then(() => {});
+    } else {
+      supabase
+        .from('notes')
+        .update({ is_trash: true, updated_at: new Date().toISOString() })
+        .eq('id', noteId)
+        .then(() => {});
+    }
+  }
+
   res.json({ success: true });
 });
 
