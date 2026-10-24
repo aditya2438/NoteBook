@@ -9,7 +9,7 @@ import { checkSpelling, translateTextOffline } from './src/utils/languageEngine'
 dotenv.config();
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
 app.use(express.json({ limit: '15mb' }));
 
@@ -551,10 +551,10 @@ interface StoredUser extends UserProfile {
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
 let usersDatabase: StoredUser[] = [
   {
-    id: 'usr-harsh-pro',
-    name: 'Harsh Bhadoria',
-    email: 'harshbhadoria6@gmail.com',
-    phone: '+1 (555) 019-8374',
+    id: 'usr-aditya-pro',
+    name: 'Aditya Chouhan',
+    email: 'aditya9993454129@gmail.com',
+    phone: '+91 99934 54129',
     plan: 'pro',
     verified: true,
     createdAt: '2026-01-15T08:00:00Z',
@@ -1187,9 +1187,10 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
-    app.use(express.static('dist'));
+    const distPath = path.resolve(process.cwd(), 'dist');
+    app.use(express.static(distPath));
     app.get('*', (_req, res) => {
-      res.sendFile('dist/index.html', { root: '.' });
+      res.sendFile(path.join(distPath, 'index.html'));
     });
   }
 

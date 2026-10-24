@@ -144,5 +144,46 @@ npm start
 
 ---
 
+## 🌐 100% Free Cloud Deployment Guide
+
+You can deploy the complete frontend, backend API, and database 100% free with a permanent public link:
+
+### Option 1: Deploy on Render.com (Recommended — Fullstack Node + Frontend)
+1. Go to [render.com](https://render.com) and create a free account.
+2. Click **New +** -> **Web Service**.
+3. Connect your GitHub repository: `aditya2438/NoteBook`.
+4. Configure the service settings:
+   - **Name**: `notebook` (or your preferred name)
+   - **Environment**: `Node`
+   - **Region**: Closest to you (e.g., Singapore or Frankfurt)
+   - **Branch**: `main`
+   - **Build Command**: `npm install && npm run build`
+   - **Start Command**: `npm start`
+   - **Instance Type**: `Free`
+5. Under **Environment Variables**, add:
+   - `NODE_ENV` = `production`
+   - `GEMINI_API_KEY` = *(Your Google Gemini API key from Google AI Studio)*
+6. Click **Create Web Service**. Within ~2 minutes, your web application will be live at:
+   `https://notebook-xxxx.onrender.com`
+
+### Option 2: Free Managed PostgreSQL Database on Supabase
+1. Go to [supabase.com](https://supabase.com) and create a free project.
+2. Navigate to **SQL Editor** in the Supabase dashboard.
+3. Open `supabase/migrations/20261023000000_init_nexora_schema.sql` from this repository, paste it into the SQL Editor, and click **Run**.
+4. All tables (`profiles`, `notes`, `folders`, `tags`) and Row-Level Security policies are instantly created.
+
+---
+
+## 👤 Author
+
+**Aditya Chouhan**
+- GitHub: [@aditya2438](https://github.com/aditya2438)
+- Email: [aditya9993454129@gmail.com](mailto:aditya9993454129@gmail.com)
+- Project: [NoteBook](https://github.com/aditya2438/NoteBook)
+
+---
+
 ## 📄 License
-Apache-2.0
+
+This project is licensed under the **MIT License** - see the [LICENSE](./LICENSE) file for details.  
+Copyright (c) 2026 Aditya Chouhan.

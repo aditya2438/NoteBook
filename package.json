@@ -1,11 +1,13 @@
 {
-  "name": "react-example",
-  "private": true,
-  "version": "0.0.0",
+  "name": "notebook",
+  "version": "1.0.0",
+  "description": "Production-grade AI-assisted infinite canvas and note-taking workspace with AMOLED dark-mode engineering math grid, rich shape manipulation, and real-time cloud autosave.",
+  "author": "Aditya Chouhan <aditya9993454129@gmail.com>",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
-    "start": "node --loader tsx server.ts",
+    "start": "tsx server.ts",
     "build": "vite build",
     "preview": "vite preview",
     "test": "tsx --test src/utils/canvasMath.test.ts",
